@@ -399,17 +399,26 @@ jobs:
         run: |
           mkdir kernel_workspace && cd kernel_workspace
           mkdir -p .repo/manifests
-          cp "$GITHUB_WORKSPACE/.repo/manifests_fallback/${FILE}.xml" ".repo/manifests/${FILE}.xml"
+          # 获取原始 XML 路径
+          SOURCE_XML="$GITHUB_WORKSPACE/.repo/manifests_fallback/${FILE}.xml"
+          TARGET_XML=".repo/manifests/${FILE}.xml"
+          
+          # --- 核心修改：使用 sed 剔除所有 upstream 字段 ---
+          # 这会匹配并删除 xml 中所有的 upstream="xxxx" 部分
+          sed 's/upstream="[^"]*"//g' "$SOURCE_XML" > "$TARGET_XML"
+          
+          # 打印一下结果，方便在 Actions 日志里确认是否改掉了
+          echo "------ 处理后的 XML 预览 (已剔除 upstream) ------"
+          head -n 20 "$TARGET_XML"
+          echo "-----------------------------------------------"
 
           MANIFEST_REPO="${{ env.MANIFEST_REPO }}"
           MANIFEST_BRANCH="${{ env.MANIFEST_BRANCH }}"
-          CPU="${{ env.CPU }}"
-          echo "MANIFEST_REPO=$MANIFEST_REPO"
-          echo "MANIFEST_BRANCH=$MANIFEST_BRANCH"
-
+          
           BASE_URL="https://github.com/${MANIFEST_REPO}/kernel_manifest.git"
 
           echo "使用 $MANIFEST_REPO 的分支 $MANIFEST_BRANCH 初始化仓库..."
+          # 注意：这里我们使用本地刚刚修改好的文件，不加 -u 远程地址也可以，但脚本逻辑需要保留
           repo init -u "$BASE_URL" -b "$MANIFEST_BRANCH" -m "${FILE}.xml" --depth=1 --no-clone-bundle --no-tags
           repo sync -c -j$(nproc) --no-clone-bundle --no-tags --force-sync
 
