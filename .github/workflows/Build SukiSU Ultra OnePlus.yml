@@ -243,11 +243,6 @@ jobs:
             return 1
           }
 
-          # 默认仓库寻找文件
-          if check_repo "OnePlusOSS" "${REPOS["OnePlusOSS"]}"; then
-            echo "MANIFEST_REPO=OnePlusOSS" >> $GITHUB_ENV
-            echo "MANIFEST_BRANCH=$FOUND_BRANCH" >> $GITHUB_ENV
-          fi
 
           # 动态仓库寻找文件
           if [[ -z "$FOUND_REPO" ]]; then
@@ -257,6 +252,12 @@ jobs:
               echo "MANIFEST_REPO=$DYNAMIC_OWNER" >> $GITHUB_ENV
               echo "MANIFEST_BRANCH=$FOUND_BRANCH" >> $GITHUB_ENV
             fi
+          fi
+          
+          # 默认仓库寻找文件
+          if check_repo "OnePlusOSS" "${REPOS["OnePlusOSS"]}"; then
+            echo "MANIFEST_REPO=OnePlusOSS" >> $GITHUB_ENV
+            echo "MANIFEST_BRANCH=$FOUND_BRANCH" >> $GITHUB_ENV
           fi
 
           if [[ -z "$FOUND_REPO" || ! -s "$XML_PATH" ]]; then
